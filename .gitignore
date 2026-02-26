@@ -2,3 +2,4 @@ target
 out
 .idea
 postgres_docker/docker-compose.yml
+src/main/resources/application.yaml
