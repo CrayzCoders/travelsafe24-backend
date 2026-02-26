@@ -1,0 +1,18 @@
+services:
+  postgres:
+    container_name: postgres
+    image: imresamu/postgis:17-3.6-bookworm
+    ports:
+      - '5432:5432'
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ./db/init-postgis.sql:/docker-entrypoint-initdb.d/init-postgis.sql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: staysafe
+    restart: always
+
+volumes:
+  database:
+    external: true
