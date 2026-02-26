@@ -11,12 +11,9 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
         default_schema: public
         show_sql: true
         format_sql: true
-  mvc:
-    throw-exception-if-no-handler-found: true
   web:
     resources:
       add-mappings: false
