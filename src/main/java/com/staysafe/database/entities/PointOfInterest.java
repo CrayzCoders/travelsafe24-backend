@@ -8,13 +8,13 @@ import org.locationtech.jts.geom.Geometry;
 public class PointOfInterest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
     @Column(nullable = false)
     private String name;
 
     @Column(nullable = false, name = "osm_id")
-    private int osmId;
+    private long osmId;
 
     @Column(nullable = false, columnDefinition = "geometry(Point, 4326)")
     private Geometry location;
@@ -35,4 +35,35 @@ public class PointOfInterest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "poi_type_id", nullable = false)
     private PoiType type;
+
+    public PointOfInterest() {
+    }
+
+    public PointOfInterest(long osmId, String name, Geometry location, District district, PoiType type) {
+        this.osmId = osmId;
+        this.name = name;
+        this.location = location;
+        this.district = district;
+        this.type = type;
+    }
+
+    public PointOfInterest(
+            long osmId,
+            String name,
+            Geometry location,
+            District district,
+            String zipCode,
+            String street,
+            String houseNumber,
+            PoiType type
+    ) {
+        this.osmId = osmId;
+        this.name = name;
+        this.location = location;
+        this.district = district;
+        this.zipCode = zipCode;
+        this.street = street;
+        this.houseNumber = houseNumber;
+        this.type = type;
+    }
 }

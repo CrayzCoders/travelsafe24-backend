@@ -1,7 +1,6 @@
 package com.staysafe.database.entities;
 
 import jakarta.persistence.*;
-
 import java.util.List;
 
 @Entity
@@ -9,7 +8,7 @@ import java.util.List;
 public class PoiType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -18,4 +17,11 @@ public class PoiType {
             cascade = CascadeType.ALL,
             orphanRemoval = true)
     private List<PointOfInterest> poi;
+
+    public PoiType() {
+    }
+
+    public PoiType(String name) {
+        this.name = name;
+    }
 }
