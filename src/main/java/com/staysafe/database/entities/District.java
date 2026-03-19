@@ -22,11 +22,19 @@ public class District {
     @Column(nullable = true)
     private int population;
 
-    @Column(columnDefinition = "geometry(Polygon,4326)")
+    @Column(columnDefinition = "geometry(MultiPolygon,4326)", nullable = false)
     private Geometry polygon;
 
     @OneToMany(mappedBy = "district",
             cascade = CascadeType.ALL,
             orphanRemoval = true)
     private List<PointOfInterest> poi;
+
+    public District() {}
+
+    public District(String name, City city, Geometry polygon) {
+        this.name = name;
+        this.city = city;
+        this.polygon = polygon;
+    }
 }
