@@ -13,6 +13,7 @@ public class AppConfig {
     private Map<String, String> urls;
     private List<String> areas;
     private List<String> amenities;
+    private int amenityLimit;
 
     public String getOverpassUrl() {
         return urls.get("overpass");
@@ -26,6 +27,10 @@ public class AppConfig {
         return amenities;
     }
 
+    public int getAmenityLimit() {
+        return amenityLimit;
+    }
+
     public void setUrls(Map<String, String> urls) {
         this.urls = urls;
     }
@@ -36,5 +41,9 @@ public class AppConfig {
 
     public void setAmenities(List<String> amenities) {
         this.amenities = amenities;
+    }
+
+    public void setAmenityLimit(int amenityLimit) {
+        this.amenityLimit = amenityLimit;
     }
 }

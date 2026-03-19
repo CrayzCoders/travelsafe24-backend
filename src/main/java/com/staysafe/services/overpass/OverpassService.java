@@ -1,7 +1,6 @@
 package com.staysafe.services.overpass;
 
 import com.staysafe.config.AppConfig;
-import com.staysafe.dto.OverpassPoiDTO;
 import com.staysafe.dto.OverpassResponseDTO;
 import com.staysafe.services.amenity.AmenityService;
 import com.staysafe.services.area.AreaService;
@@ -15,6 +14,7 @@ public class OverpassService {
     private final WebClient client;
     private final AreaService areaService;
     private final AmenityService amenityService;
+    private final int amenityLimit;
 
     public OverpassService(
             AppConfig appConfig,
@@ -24,16 +24,17 @@ public class OverpassService {
         this.areaService = areaService;
         this.amenityService = amenityService;
         this.client = WebClient.create(appConfig.getOverpassUrl());
+        this.amenityLimit = appConfig.getAmenityLimit();
     }
 
-    public List<OverpassPoiDTO> getAmenitiesForArea(String amenity, String area) {
+    public List<OverpassResponseDTO.Element> getAmenitiesForArea(String amenity, String area) {
         if (!this.areaService.isValidArea(area)) {
             return List.of();
         }
         if (!this.amenityService.isValidAmenity(amenity)) {
             return List.of();
         }
-        String query = "[out:json][timeout:750];area[name=\"" + area + "\"][boundary=\"administrative\"]->.searchArea;(node[\"amenity\"=\"" + amenity + "\"](area.searchArea);way[\"amenity\"=\"" + amenity + "\"](area.searchArea);relation[\"amenity\"=\"" + amenity + "\"](area.searchArea););out center;";
+        String query = "[out:json][timeout:750];area[name=\"" + area + "\"][boundary=\"administrative\"]->.searchArea;(node[\"amenity\"=\"" + amenity + "\"](area.searchArea);way[\"amenity\"=\"" + amenity + "\"](area.searchArea);relation[\"amenity\"=\"" + amenity + "\"](area.searchArea););out " + this.amenityLimit + ";";
 
         return this.getMappedResponse(this.getResponse(query));
     }
@@ -47,21 +48,12 @@ public class OverpassService {
                 .block();
     }
 
-    private List<OverpassPoiDTO> getMappedResponse(String response) {
+    private List<OverpassResponseDTO.Element> getMappedResponse(String response) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             OverpassResponseDTO responseDto = mapper.readValue(response, OverpassResponseDTO.class);
 
-            return responseDto.getElements().stream()
-                    .map(e -> {
-                        long id = e.getId();
-                        double lat = (e.getLat() != null) ? e.getLat() : e.getCenter().getLat();
-                        double lon = (e.getLon() != null) ? e.getLon() : e.getCenter().getLon();
-                        String type = e.getType();
-                        String name = (e.getTags() != null) ? e.getTags().getName() : null;
-
-                        return new OverpassPoiDTO(id, type, lon, lat, name);
-                    }).toList();
+            return responseDto.getElements();
         } catch (Exception e) {
             return List.of();
         }

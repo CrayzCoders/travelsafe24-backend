@@ -17,5 +17,13 @@ spring:
   web:
     resources:
       add-mappings: false
+
+staysafe:
   urls:
-    overpass: "https://overpass.com"
+    overpass: https://overpass-api.de/api
+  areas:
+    - Hamburg
+  amenities:
+    - bar
+    - nightclub
+  amenityLimit: 10

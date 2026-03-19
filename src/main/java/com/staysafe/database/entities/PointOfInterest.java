@@ -66,4 +66,16 @@ public class PointOfInterest {
         this.houseNumber = houseNumber;
         this.type = type;
     }
+
+    public void setZipCode(String zipCode) {
+        this.zipCode = zipCode;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public void setHouseNumber(String houseNumber) {
+        this.houseNumber = houseNumber;
+    }
 }

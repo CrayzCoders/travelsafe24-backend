@@ -4,7 +4,7 @@ import com.staysafe.config.AppConfig;
 import com.staysafe.database.entities.District;
 import com.staysafe.database.entities.PoiType;
 import com.staysafe.database.entities.PointOfInterest;
-import com.staysafe.dto.OverpassPoiDTO;
+import com.staysafe.dto.OverpassResponseDTO;
 import com.staysafe.services.city.DistrictService;
 import com.staysafe.services.geometry.GeometryUtils;
 import com.staysafe.services.overpass.OverpassService;
@@ -46,7 +46,7 @@ public class LoadAmenities implements ApplicationRunner {
 
     @Override
     public void run(@NonNull ApplicationArguments args) {
-        List<OverpassPoiDTO> amenitiesToSave = new ArrayList<>();
+        List<OverpassResponseDTO.Element> amenitiesToSave = new ArrayList<>();
         List<String> areas = this.appConfig.getAreas();
         List<String> amenitiesToGet = this.appConfig.getAmenities();
 
@@ -56,8 +56,8 @@ public class LoadAmenities implements ApplicationRunner {
             }
         }
 
-        for (OverpassPoiDTO amenity : amenitiesToSave) {
-            if (this.poiService.findByOsmId(amenity.id()).isEmpty()) {
+        for (OverpassResponseDTO.Element amenity : amenitiesToSave) {
+            if (this.poiService.findByOsmId(amenity.getId()).isEmpty()) {
                 this.createPointOfInterest(amenity);
             }
         }
@@ -65,18 +65,33 @@ public class LoadAmenities implements ApplicationRunner {
         SpringApplication.exit(context);
     }
 
-    private void createPointOfInterest(OverpassPoiDTO amenity) {
-        Point location = GeometryUtils.createPoint(amenity.lat(), amenity.lon());
+    private void createPointOfInterest(OverpassResponseDTO.Element amenity) {
+        double amenityLon = amenity.getLon() != null ?  amenity.getLon() : amenity.getCenter().getLon();
+        double amenityLat = amenity.getLat() != null ?  amenity.getLat() : amenity.getCenter().getLat();
+
+        Point location = GeometryUtils.createPoint(amenityLat, amenityLon);
         Optional<District> district = this.districtService.findByPoint(location);
         if (district.isPresent()) {
-            PoiType type = this.poiService.findOrCreateType(amenity.name());
+            PoiType type = this.poiService.findOrCreateType(amenity.getTags().getAmenityType());
             PointOfInterest pointOfInterest = new PointOfInterest(
-                amenity.id(),
-                amenity.name(),
+                amenity.getId(),
+                amenity.getTags().getName(),
                 location,
                 district.get(),
                 type
             );
+
+            if (amenity.getTags().getZip() != null) {
+                pointOfInterest.setZipCode(amenity.getTags().getZip());
+            }
+
+            if (amenity.getTags().getStreet() != null) {
+                pointOfInterest.setStreet(amenity.getTags().getStreet());
+            }
+
+            if (amenity.getTags().getHouseNumber() != null) {
+                pointOfInterest.setHouseNumber(amenity.getTags().getHouseNumber());
+            }
 
             this.poiService.savePointOfInterest(pointOfInterest);
         }

@@ -9,8 +9,13 @@ import java.util.List;
 public class OverpassResponseDTO {
     private List<Element> elements;
 
-    public List<Element> getElements() { return elements; }
-    public void setElements(List<Element> elements) { this.elements = elements; }
+    public List<Element> getElements() {
+        return elements;
+    }
+
+    public void setElements(List<Element> elements) {
+        this.elements = elements;
+    }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Element {
@@ -21,34 +26,82 @@ public class OverpassResponseDTO {
         private Center center;
         private Tags tags;
 
-        public String getType() { return type; }
-        public void setType(String type) { this.type = type; }
-        public long getId() { return id; }
-        public void setId(long id) { this.id = id; }
-        public Double getLat() { return lat; }
-        public void setLat(Double lat) { this.lat = lat; }
-        public Double getLon() { return lon; }
-        public void setLon(Double lon) { this.lon = lon; }
-        public Center getCenter() { return center; }
-        public void setCenter(Center center) { this.center = center; }
-        public Tags getTags() { return tags; }
-        public void setTags(Tags tags) { this.tags = tags; }
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public long getId() {
+            return id;
+        }
+
+        public void setId(long id) {
+            this.id = id;
+        }
+
+        public Double getLat() {
+            return lat;
+        }
+
+        public void setLat(Double lat) {
+            this.lat = lat;
+        }
+
+        public Double getLon() {
+            return lon;
+        }
+
+        public void setLon(Double lon) {
+            this.lon = lon;
+        }
+
+        public Center getCenter() {
+            return center;
+        }
+
+        public void setCenter(Center center) {
+            this.center = center;
+        }
+
+        public Tags getTags() {
+            return tags;
+        }
+
+        public void setTags(Tags tags) {
+            this.tags = tags;
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Center {
         private Double lat;
         private Double lon;
-        public Double getLat() { return lat; }
-        public void setLat(Double lat) { this.lat = lat; }
-        public Double getLon() { return lon; }
-        public void setLon(Double lon) { this.lon = lon; }
+
+        public Double getLat() {
+            return lat;
+        }
+
+        public void setLat(Double lat) {
+            this.lat = lat;
+        }
+
+        public Double getLon() {
+            return lon;
+        }
+
+        public void setLon(Double lon) {
+            this.lon = lon;
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Tags {
         private String name;
-        private String amenity;
+        @JsonProperty("amenity")
+        private String amenityType;
 
         @JsonProperty("addr:city")
         private String city;
@@ -62,22 +115,52 @@ public class OverpassResponseDTO {
         @JsonProperty("addr:housenumber")
         private String houseNumber;
 
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
+        public String getName() {
+            return name;
+        }
 
-        public String getAmenity() { return amenity; }
-        public void setAmenity(String amenity) { this.amenity = amenity; }
+        public void setName(String name) {
+            this.name = name;
+        }
 
-        public String getCity() { return city; }
-        public void setCity(String city) { this.city = city; }
+        public String getAmenityType() {
+            return amenityType;
+        }
 
-        public String getZip() { return zip; }
-        public void setZip(String zip) { this.zip = zip; }
+        public void setAmenityType(String amenity) {
+            this.amenityType = amenity;
+        }
 
-        public String getStreet() { return street; }
-        public void setStreet(String street) { this.street = street; }
+        public String getCity() {
+            return city;
+        }
 
-        public String getHouseNumber() { return houseNumber; }
-        public void setHouseNumber(String houseNumber) { this.houseNumber = houseNumber; }
+        public void setCity(String city) {
+            this.city = city;
+        }
+
+        public String getZip() {
+            return zip;
+        }
+
+        public void setZip(String zip) {
+            this.zip = zip;
+        }
+
+        public String getStreet() {
+            return street;
+        }
+
+        public void setStreet(String street) {
+            this.street = street;
+        }
+
+        public String getHouseNumber() {
+            return houseNumber;
+        }
+
+        public void setHouseNumber(String houseNumber) {
+            this.houseNumber = houseNumber;
+        }
     }
 }
