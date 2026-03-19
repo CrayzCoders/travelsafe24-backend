@@ -54,9 +54,19 @@
 			<version>7.2.5.Final</version>
 		</dependency>
 		<dependency>
-			<groupId>org.locationtech.jts</groupId>
-			<artifactId>jts-core</artifactId>
+			<groupId>org.locationtech.jts.io</groupId>
+			<artifactId>jts-io-common</artifactId>
 			<version>1.19.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.15.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.wololo</groupId>
+			<artifactId>jts2geojson</artifactId>
+			<version>0.16.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
