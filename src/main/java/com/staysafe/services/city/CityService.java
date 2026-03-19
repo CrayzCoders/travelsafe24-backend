@@ -5,6 +5,7 @@ import com.staysafe.database.entities.District;
 import com.staysafe.database.repositories.CityRepository;
 import com.staysafe.database.repositories.DistrictRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -27,5 +28,10 @@ public class CityService {
 
     public Optional<District> findDistrict(String name, City city) {
         return this.districtRepository.findByNameAndCity(name, city);
+    }
+
+    public List<District> getAllDistricts() {
+        City city = this.cityRepository.findByNameAndCountry("Hamburg", "Germany").get();
+        return this.districtRepository.findDistrictsByCity(city);
     }
 }

@@ -24,4 +24,8 @@ public class PoiType {
     public PoiType(String name) {
         this.name = name;
     }
+
+    public String getName() {
+        return name;
+    }
 }

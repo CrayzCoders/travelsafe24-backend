@@ -10,7 +10,7 @@ public class PointOfInterest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String name;
 
     @Column(nullable = false, name = "osm_id")
@@ -77,5 +77,9 @@ public class PointOfInterest {
 
     public void setHouseNumber(String houseNumber) {
         this.houseNumber = houseNumber;
+    }
+
+    public PoiType getType() {
+        return type;
     }
 }

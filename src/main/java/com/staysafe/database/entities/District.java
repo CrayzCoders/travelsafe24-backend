@@ -37,4 +37,16 @@ public class District {
         this.city = city;
         this.polygon = polygon;
     }
+
+    public List<PointOfInterest> getPoi() {
+        return poi;
+    }
+
+    public Geometry getPolygon() {
+        return polygon;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

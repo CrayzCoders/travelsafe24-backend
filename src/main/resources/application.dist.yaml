@@ -26,4 +26,8 @@ staysafe:
   amenities:
     - bar
     - nightclub
+    - kindergarten
+    - childcare
+    - college
+    - university
   amenityLimit: 10
