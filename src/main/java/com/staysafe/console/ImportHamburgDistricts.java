@@ -3,6 +3,7 @@ package com.staysafe.console;
 import com.staysafe.database.entities.City;
 import com.staysafe.database.entities.District;
 import com.staysafe.database.repositories.DistrictRepository;
+import com.staysafe.dto.FeaturesDTO;
 import com.staysafe.dto.GeoJsonDistrictDTO;
 import com.staysafe.services.city.CityService;
 import org.jspecify.annotations.NonNull;
@@ -40,24 +41,28 @@ public class ImportHamburgDistricts implements ApplicationRunner {
     public void run(@NonNull ApplicationArguments args) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
 
-        List<GeoJsonDistrictDTO> geoJsons = mapper.readValue(
-            new File("src/main/resources/districts/hamburg.json"),
-            mapper.getTypeFactory().constructCollectionType(List.class, GeoJsonDistrictDTO.class)
+        FeaturesDTO features = mapper.readValue(
+            new File("src/main/resources/import_data/districts/hamburg.json"),FeaturesDTO.class
         );
+        List<GeoJsonDistrictDTO> geoJsons = features.getFeatures();
         GeoJSONReader reader = new GeoJSONReader();
 
         City city = this.cityService.findOrCreate("Hamburg", "Germany");
 
         for (GeoJsonDistrictDTO geoJson : geoJsons) {
+
             String districtName = geoJson.getProperties().getDistrict();
-            String geometryJson = mapper.writeValueAsString(geoJson.getGeometry());
-
-            Geometry geometry = reader.read(geometryJson);
-            geometry.setSRID(4326);
-
-            District district = new District(districtName, city, geometry);
-
-            districtRepository.save(district);
+            
+            if(cityService.findDistrict(districtName, city).isEmpty()) {
+                
+                String geometryJson = mapper.writeValueAsString(geoJson.getGeometry());
+                Geometry geometry = reader.read(geometryJson);
+                geometry.setSRID(4326);
+                
+                District district = new District(districtName, city, geometry);
+                
+                districtRepository.save(district);
+            }
         }
 
         SpringApplication.exit(context);

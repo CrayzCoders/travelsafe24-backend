@@ -1,5 +1,8 @@
 package com.staysafe.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GeoJsonDistrictDTO {
     private GeoJsonDistrictPropertiesDTO properties;
     private GeometryDTO geometry;
