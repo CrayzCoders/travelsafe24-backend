@@ -26,6 +26,13 @@ public class City {
     @Column(nullable = true)
     private int population;
 
-    @Column(columnDefinition = "geometry(Polygon,4326)")
+    @Column(columnDefinition = "geometry(MultiPolygon,4326)")
     private Geometry polygon;
+
+    public City() {}
+
+    public City(String name, String country) {
+        this.name = name;
+        this.country = country;
+    }
 }
