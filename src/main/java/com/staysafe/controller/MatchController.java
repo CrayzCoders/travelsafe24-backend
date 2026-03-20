@@ -4,6 +4,7 @@ import com.staysafe.database.entities.District;
 import com.staysafe.database.entities.PointOfInterest;
 import com.staysafe.dto.*;
 import com.staysafe.services.city.CityService;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +29,7 @@ public class MatchController {
         this.cityService = cityService;
     }
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/get-matching-scores")
     public MatchResponseDTO getMatchingScores(@RequestBody MatchFormRequestDTO requestData) {
         Map<String, Double> normalizedPreferences = this.normalizeUserPreferences(requestData);
