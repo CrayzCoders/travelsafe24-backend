@@ -73,8 +73,8 @@ public class LoadAmenities implements ApplicationRunner {
 
     private void createPointOfInterest(OverpassResponseDTO.Element amenity) {
         if (
-                (amenity.getLat() == null && amenity.getCenter().getLat() == null)
-                || (amenity.getLon() == null && amenity.getCenter().getLon() == null)
+                (amenity.getLat() == null && (amenity.getCenter() == null || amenity.getCenter().getLat() == null))
+                || (amenity.getLon() == null && (amenity.getCenter() == null || amenity.getCenter().getLon() == null))
         ) {
             return;
         }
