@@ -6,12 +6,12 @@ import com.staysafe.database.repositories.DistrictRepository;
 import com.staysafe.dto.FeaturesDTO;
 import com.staysafe.dto.GeoJsonDistrictDTO;
 import com.staysafe.services.city.CityService;
+import jakarta.transaction.Transactional;
+import org.geolatte.geom.jts.JTS;
 import org.jspecify.annotations.NonNull;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,22 +21,20 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-@Profile("import-districts")
-public class ImportHamburgDistricts implements ApplicationRunner {
+@Profile("import-geometry")
+public class ImportHamburgGeometry implements ApplicationRunner {
     private final DistrictRepository districtRepository;
     private final CityService cityService;
-    private final ApplicationContext context;
 
-    public ImportHamburgDistricts(
+    public ImportHamburgGeometry(
             DistrictRepository districtRepository,
-            CityService cityService,
-            ApplicationContext context
+            CityService cityService
     ) {
         this.districtRepository = districtRepository;
         this.cityService = cityService;
-        this.context = context;
     }
 
+    @Transactional
     @Override
     public void run(@NonNull ApplicationArguments args) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
@@ -54,17 +52,26 @@ public class ImportHamburgDistricts implements ApplicationRunner {
             String districtName = geoJson.getProperties().getDistrict();
             
             if(cityService.findDistrict(districtName, city).isEmpty()) {
-                
+
                 String geometryJson = mapper.writeValueAsString(geoJson.getGeometry());
                 Geometry geometry = reader.read(geometryJson);
                 geometry.setSRID(4326);
-                
+
                 District district = new District(districtName, city, geometry);
-                
+
                 districtRepository.save(district);
             }
         }
 
-        SpringApplication.exit(context);
+        boolean validGeometry = districtRepository.isValidUnionByCity(city.getId());
+        if (validGeometry) {
+            org.geolatte.geom.Geometry<?> geom =
+                    (org.geolatte.geom.Geometry<?>) districtRepository.unionByCity(city.getId());
+
+            city.setGeometry(JTS.to(geom));
+            cityService.saveCity(city);
+        } else {
+            throw new RuntimeException("invalid geometry while fetching boundary box of the city");
+        }
     }
 }

@@ -31,7 +31,11 @@ public class CityService {
     }
 
     public List<District> getAllDistricts() {
-        City city = this.cityRepository.findByNameAndCountry("Hamburg", "Germany").get();
+        City city = this.cityRepository.findByNameAndCountry("Hamburg", "Germany").orElseThrow();
         return this.districtRepository.findDistrictsByCity(city);
+    }
+
+    public void saveCity(City city) {
+        cityRepository.save(city);
     }
 }

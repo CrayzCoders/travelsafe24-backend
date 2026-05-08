@@ -35,4 +35,12 @@ public class City {
         this.name = name;
         this.country = country;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setGeometry(Geometry geometry) {
+        this.polygon = geometry;
+    }
 }

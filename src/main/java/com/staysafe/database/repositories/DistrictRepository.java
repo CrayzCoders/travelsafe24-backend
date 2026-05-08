@@ -5,6 +5,7 @@ import com.staysafe.database.entities.District;
 
 import java.util.List;
 import java.util.Optional;
+
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,4 +18,18 @@ public interface DistrictRepository extends JpaRepository<District, Long> {
     Optional<District> findByPoint(@Param("point") Point point);
 
     List<District> findDistrictsByCity(City city);
+
+    @Query(value = """
+    SELECT ST_IsValid(ST_Multi(ST_UnaryUnion(ST_Collect(d.polygon))))
+    FROM districts d
+    WHERE d.city_id = :cityId
+    """, nativeQuery = true)
+    boolean isValidUnionByCity(Long cityId);
+
+    @Query(value = """
+    SELECT ST_Multi(ST_UnaryUnion(ST_Collect(d.polygon)))
+    FROM districts d
+    WHERE d.city_id = :cityId
+    """, nativeQuery = true)
+    Object unionByCity(Long cityId);
 }
