@@ -15,4 +15,5 @@ services:
 
 volumes:
   database:
-    external: true
+    name: travelsafe24
+    driver: local
