@@ -4,3 +4,4 @@ out
 postgres_docker/docker-compose.yml
 src/main/resources/application.yaml
 src/main/resources/import_osm_data/*.osm.pbf
+.claude
