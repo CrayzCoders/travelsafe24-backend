@@ -2,6 +2,7 @@ package com.staysafe.domain.pointofinterest;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,5 +34,11 @@ public class PoiService {
 
     public void savePointOfInterest(PointOfInterest pointOfInterest) {
         this.pointOfInterestRepository.saveAndFlush(pointOfInterest);
+    }
+
+    public List<PointOfInterest> findByPoiTypeName(String typeName) {
+        return poiTypeRepository.findByName(typeName)
+            .map(poiType -> this.pointOfInterestRepository.findByPoiType(poiType))
+            .orElse(List.of());
     }
 }

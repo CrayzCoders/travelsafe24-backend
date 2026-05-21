@@ -83,4 +83,36 @@ public class PointOfInterest {
     public PoiType getType() {
         return type;
     }
+
+    public long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public long getOsmId() {
+        return osmId;
+    }
+
+    public Geometry getLocation() {
+        return location;
+    }
+
+    public District getDistrict() {
+        return district;
+    }
+
+    public String getZipCode() {
+        return zipCode;
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public String getHouseNumber() {
+        return houseNumber;
+    }
 }
