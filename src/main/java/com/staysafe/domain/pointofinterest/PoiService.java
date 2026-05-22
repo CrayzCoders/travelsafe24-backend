@@ -38,7 +38,7 @@ public class PoiService {
 
     public List<PointOfInterest> findByPoiTypeName(String typeName) {
         return poiTypeRepository.findByName(typeName)
-            .map(poiType -> this.pointOfInterestRepository.findByPoiType(poiType))
+            .map(poiType -> this.pointOfInterestRepository.findByType(poiType))
             .orElse(List.of());
     }
 }

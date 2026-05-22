@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface PointOfInterestRepository extends JpaRepository<PointOfInterest, Long> {
     Optional<PointOfInterest> findByOsmId(long osmId);
-    List<PointOfInterest> findByPoiType(PoiType poiType);
+    List<PointOfInterest> findByType(PoiType poiType);
 }
