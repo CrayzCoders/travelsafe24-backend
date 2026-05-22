@@ -28,7 +28,7 @@ public class MatchController {
     }
 
     @CrossOrigin(origins = "http://localhost:3000")
-    @PostMapping("/get-matching-scores")
+    @PostMapping("/api/get-matching-scores")
     public MatchResponseDTO getMatchingScores(@RequestBody MatchFormRequestDTO requestData) {
         Map<String, Double> normalizedPreferences = matchingScoreService.normalizeUserPreferences(requestData);
         List<District> districts = this.cityService.getAllDistricts();
