@@ -48,7 +48,7 @@ public class LoadAmenities implements ApplicationRunner {
 
     @Override
     public void run(@NonNull ApplicationArguments args) throws FileNotFoundException {
-        InputStream input = new FileInputStream("/Users/b_damerow/develop_private/travelsafe24-backend/src/main/resources/import_osm_data/hamburg-260506.osm.pbf");
+        InputStream input = new FileInputStream("src/main/resources/import_osm_data/hamburg-260506.osm.pbf");
         PbfIterator iterator = new PbfIterator(input, true);
 
         List<Node> nodes = new ArrayList<>();
