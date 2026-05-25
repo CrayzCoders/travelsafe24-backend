@@ -3,6 +3,7 @@ package com.staysafe.application.console.amenities;
 import com.slimjars.dist.gnu.trove.list.TLongList;
 import com.staysafe.domain.district.District;
 import com.staysafe.domain.district.DistrictService;
+import com.staysafe.domain.osmimport.OsmRoles;
 import com.staysafe.domain.osmimport.OsmTags;
 import com.staysafe.domain.pointofinterest.PoiService;
 import com.staysafe.domain.pointofinterest.PoiType;
@@ -16,7 +17,8 @@ import de.topobyte.osm4j.geometry.GeometryBuilder;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
 import org.jspecify.annotations.NonNull;
 import org.locationtech.jts.geom.*;
-import org.locationtech.jts.index.strtree.STRtree;
+import org.locationtech.jts.index.kdtree.KdNode;
+import org.locationtech.jts.index.kdtree.KdTree;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
@@ -31,7 +33,7 @@ import java.util.*;
 @Profile("import-amenities")
 public class LoadAmenities implements ApplicationRunner {
     private final GeometryFactory geometryFactory;
-    private final STRtree index;
+    private final KdTree savedNodesIndex;
     private final Map<Long, Coordinate> nodeIndex = new HashMap<>();
     private final Map<Long, Way> wayIndex = new HashMap<>();
     private final PoiService poiService;
@@ -42,8 +44,9 @@ public class LoadAmenities implements ApplicationRunner {
         this.poiService = poiService;
         this.districtService = districtService;
         this.geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-        this.index = new STRtree();
+        this.savedNodesIndex = new KdTree();
         this.builder = new GeometryBuilder(geometryFactory);
+        // TODO: initialize saveNodesIndex with existing Nodes, ways and relations in database
     }
 
     @Override
@@ -80,13 +83,14 @@ public class LoadAmenities implements ApplicationRunner {
             }
         }
 
-        List<Node> nodesToSafe = getNodesWithAmenities(nodes);
-        List<Way> waysToBeSafed = getNeededWaysWithAmenities(ways);
-        List<Relation> relationsToBeSaved = getNeededRelationsWithAmenities(relations, waysToBeSafed, nodesToSafe);
+        List<Node> nodesToSave = getNodesWithAmenities(nodes);
+        saveNodes(nodesToSave);
 
-        safeNodes(nodesToSafe);
-        safeWays(waysToBeSafed);
-        safeRelations(relationsToBeSaved);
+        List<Way> waysToBeSaved = getNeededWaysWithAmenities(ways);
+        saveWays(waysToBeSaved);
+
+        List<Relation> relationsToBeSaved = getNeededRelationsWithAmenities(relations);
+        saveRelations(relationsToBeSaved);
     }
 
     private List<Node> getNodesWithAmenities(List<Node> nodes) {
@@ -96,8 +100,6 @@ public class LoadAmenities implements ApplicationRunner {
             for (OsmTag tag : tags) {
                 if (OsmTags.AMENITY.getKeyValue().equals(tag.getKey()) && !tag.getValue().isEmpty()) {
                     nodesWithAmenities.add(node);
-                    Point p = builder.build(node);
-                    index.insert(p.getEnvelopeInternal(), p);
                 }
             }
         }
@@ -121,27 +123,7 @@ public class LoadAmenities implements ApplicationRunner {
         List<Way> neededWaysWithAmenities = new ArrayList<>();
         // check for nodes
         for (Way way : waysWithAmenities) {
-            Coordinate[] coords = getWayCoordinates(way);
-
-            // return the correct geometry. whether the way is closed or not (i.e. starting point = end point)
-            if (coords.length < 2 || !coords[0].equals2D(coords[coords.length - 1])) {
-                continue;
-            }
-            Geometry geom = geometryFactory.createPolygon(coords);
-
-            boolean containsAmenity = false;
-
-            @SuppressWarnings("unchecked")
-            List<Point> candidates = index.query(geom.getEnvelopeInternal());
-            // check whether one valid node (point of interest) lies within the boundary of the way
-            for (Point p : candidates) {
-                if (geom.contains(p)) {
-                    containsAmenity = true;
-                    break;
-                }
-            }
-
-            if (!containsAmenity) {
+            if (!doesWayContainSavedNode(way)) {
                 neededWaysWithAmenities.add(way);
             }
         }
@@ -149,44 +131,78 @@ public class LoadAmenities implements ApplicationRunner {
         return neededWaysWithAmenities;
     }
 
-    private List<Relation> getNeededRelationsWithAmenities(List<Relation> relations, List<Way> savedWays, List<Node> savedNodes) {
+    private List<Relation> getNeededRelationsWithAmenities(List<Relation> relations) {
         List<Relation> neededRelationsWithAmenities = new ArrayList<>();
+        int relationsWithAmenityCount = 0;
         for (Relation relation : relations) {
             String amenity = getTagValue(OsmTags.AMENITY.getKeyValue(), relation.getTags());
             if (amenity == null) {
                 continue;
             }
+            relationsWithAmenityCount++;
 
-            if (existsNodeOrWayInRelation(relation, savedWays, savedNodes)) {
+            if (existsNodeOrWayInRelation(relation)) {
                 continue;
             }
 
             neededRelationsWithAmenities.add(relation);
         }
+        System.out.println("with amenities: " + relationsWithAmenityCount);
+        System.out.println("unique: " + neededRelationsWithAmenities.size());
 
         return neededRelationsWithAmenities;
     }
 
-    private boolean existsNodeOrWayInRelation(Relation relation, List<Way> ways, List<Node> nodes) {
+    private boolean doesWayContainSavedNode(Way way) {
+        Polygon geom = getWayPolygon(way);
+        if (geom == null) {
+            return true;
+        }
+
+        boolean containsSavedNode = false;
+
+        @SuppressWarnings("unchecked")
+        List<KdNode> candidates = savedNodesIndex.query(geom.getEnvelopeInternal());
+        for (KdNode kdNode : candidates) {
+            Point p = (Point) kdNode.getData();
+            if (geom.contains(p)) {
+                containsSavedNode = true;
+                break;
+            }
+        }
+
+        return containsSavedNode;
+    }
+
+    private boolean existsNodeOrWayInRelation(Relation relation) {
         for (OsmRelationMember member: relation.getMembers()) {
-            switch (member.getType()) {
-                case Node:
-                    if (nodes.stream().anyMatch((node) -> node.getId() == member.getId())) {
-                        return true;
-                    }
-                    break;
-                case Way:
-                    if (ways.stream().anyMatch((way) -> way.getId() == member.getId())) {
-                        return true;
-                    }
-                    break;
+            if (Objects.requireNonNull(member.getType()) != EntityType.Way) {
+                continue;
+            }
+            if (!member.getRole().equals(OsmRoles.OUTER.getKeyValue())) {
+                continue;
+            }
+
+            Way way = wayIndex.get(member.getId());
+            if (doesWayContainSavedNode(way)) {
+                return true;
+            }
+
+            Polygon polygon = getWayPolygon(way);
+            if (polygon == null) {
+                continue;
+            }
+
+            List<PointOfInterest> existingPointInPolygon = poiService.findInsidePolygon(polygon);
+            if (!existingPointInPolygon.isEmpty()) {
+                return true;
             }
         }
 
         return false;
     }
 
-    private void safeNodes(List<Node> nodes) {
+    private void saveNodes(List<Node> nodes) {
         for (Node node: nodes) {
             List<? extends OsmTag> tags = node.getTags();
             String amenity = getTagValue(OsmTags.AMENITY.getKeyValue(), tags);
@@ -217,23 +233,26 @@ public class LoadAmenities implements ApplicationRunner {
                     type
             );
             poiService.savePointOfInterest(poi);
+            savedNodesIndex.insert(point.getCoordinate(), point);
         }
     }
 
-    private void safeWays(List<Way> ways) {
-        for(Way way: ways) {
+    private void saveWays(List<Way> ways) {
+        for (Way way : ways) {
             List<? extends OsmTag> tags = way.getTags();
             String amenity = getTagValue(OsmTags.AMENITY.getKeyValue(), tags);
             if (null == amenity) {
                 continue;
             }
 
-            Coordinate[] coords = getWayCoordinates(way);
-            LinearRing shell = geometryFactory.createLinearRing(coords);
-            Polygon polygon = geometryFactory.createPolygon(shell);
+            Polygon polygon = getWayPolygon(way);
+            if (polygon == null) {
+                continue;
+            }
+
             Point center = polygon.getCentroid();
 
-            if(center.isEmpty() || !center.isValid()) {
+            if (center == null || center.isEmpty() || !center.isValid()) {
                 continue;
             }
 
@@ -265,10 +284,11 @@ public class LoadAmenities implements ApplicationRunner {
                     type
             );
             poiService.savePointOfInterest(poi);
+            savedNodesIndex.insert(center.getCoordinate(), center);
         }
     }
 
-    private void safeRelations(List<Relation> relations) {
+    private void saveRelations(List<Relation> relations) {
         for (Relation relation: relations) {
             List<? extends OsmTag> tags = relation.getTags();
             String amenity = getTagValue(OsmTags.AMENITY.getKeyValue(), tags);
@@ -284,17 +304,12 @@ public class LoadAmenities implements ApplicationRunner {
                     continue;
                 }
 
-                Optional<PointOfInterest> existingWay = poiService.findByOsmId(relation.getId());
-                if (existingWay.isPresent()) {
+                Optional<PointOfInterest> existingRelation = poiService.findByOsmId(relation.getId());
+                if (existingRelation.isPresent()) {
                     continue;
                 }
 
                 PoiType type = poiService.findOrCreateType(amenity);
-
-                List<PointOfInterest> existingPointInPolygon = poiService.findInsidePolygon((Polygon) geometry);
-                if (!existingPointInPolygon.isEmpty()) {
-                    continue;
-                }
 
                 Optional<District> districtOptional = districtService.findByPoint(center);
                 if (districtOptional.isEmpty()) {
@@ -350,12 +365,27 @@ public class LoadAmenities implements ApplicationRunner {
         return coords;
     }
 
+    private Polygon getWayPolygon(Way way) {
+        if (way == null) {
+            return null;
+        }
+
+        Coordinate[] coords = getWayCoordinates(way);
+        if (coords.length < 2 || !coords[0].equals2D(coords[coords.length - 1])) {
+            return null;
+        }
+
+        LinearRing shell = geometryFactory.createLinearRing(coords);
+        return geometryFactory.createPolygon(shell);
+    }
+
     class RelationProvider implements OsmEntityProvider {
         private final Relation relation;
 
         RelationProvider(Relation relation) {
             this.relation = relation;
         }
+
         @Override
         public OsmNode getNode(long id) {
             Coordinate c = nodeIndex.get(id);
