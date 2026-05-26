@@ -10,6 +10,10 @@ import java.util.Optional;
 
 public interface PointOfInterestRepository extends JpaRepository<PointOfInterest, Long> {
     Optional<PointOfInterest> findByOsmId(long osmId);
+
+    List<PointOfInterest> findByTypeName(String typeName);
+    List<PointOfInterest> findByDistrictName(String districtName);
+    List<PointOfInterest> findByTypeNameAndDistrictName(String typeName, String districtName);
     List<PointOfInterest> findByType(PoiType poiType);
 
     @Query(value = """

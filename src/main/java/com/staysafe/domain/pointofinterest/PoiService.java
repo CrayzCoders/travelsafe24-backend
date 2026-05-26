@@ -42,9 +42,19 @@ public class PoiService {
         return pointOfInterestRepository.findInsidePolygon(polygon);
     }
 
-    public List<PointOfInterest> findByPoiTypeName(String typeName) {
-        return poiTypeRepository.findByName(typeName)
-            .map(poiType -> this.pointOfInterestRepository.findByType(poiType))
-            .orElse(List.of());
+    public List<PointOfInterest> findPois(String typeName, String districtName) {
+        boolean hasType = typeName != null && !typeName.isBlank();
+        boolean hasDistrict = districtName != null && !districtName.isBlank();
+
+        if (hasType && hasDistrict) {
+            return pointOfInterestRepository.findByTypeNameAndDistrictName(typeName, districtName);
+        }
+        if (hasType) return pointOfInterestRepository.findByTypeName(typeName);
+        if (hasDistrict) return pointOfInterestRepository.findByDistrictName(districtName);
+        return pointOfInterestRepository.findAll();
+    }
+
+    public List<PoiType> getAllPoiTypes() {
+        return poiTypeRepository.findAll();
     }
 }

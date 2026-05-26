@@ -18,6 +18,8 @@ public interface DistrictRepository extends JpaRepository<District, Long> {
 
     List<District> findDistrictsByCity(City city);
 
+    Optional<District> findDistrictByName(String districtName);
+
     @Query(value = """
     SELECT ST_IsValid(ST_Multi(ST_UnaryUnion(ST_Collect(d.polygon))))
     FROM districts d
