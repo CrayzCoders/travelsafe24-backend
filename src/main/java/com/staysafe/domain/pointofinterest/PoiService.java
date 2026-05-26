@@ -1,5 +1,7 @@
 package com.staysafe.domain.pointofinterest;
 
+import org.locationtech.jts.geom.Polygon;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,11 +31,15 @@ public class PoiService {
     }
 
     public Optional<PointOfInterest> findByOsmId(long osmId) {
-        return this.pointOfInterestRepository.findByOsmId(osmId);
+        return pointOfInterestRepository.findByOsmId(osmId);
     }
 
     public void savePointOfInterest(PointOfInterest pointOfInterest) {
-        this.pointOfInterestRepository.saveAndFlush(pointOfInterest);
+        pointOfInterestRepository.saveAndFlush(pointOfInterest);
+    }
+
+    public List<PointOfInterest> findInsidePolygon(@Param("polygon") Polygon polygon) {
+        return pointOfInterestRepository.findInsidePolygon(polygon);
     }
 
     public List<PointOfInterest> findPois(String typeName, String districtName) {
