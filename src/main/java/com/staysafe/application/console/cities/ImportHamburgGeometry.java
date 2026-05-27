@@ -11,10 +11,10 @@ import org.locationtech.jts.geom.Geometry;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.wololo.jts2geojson.GeoJSONReader;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -38,7 +38,8 @@ public class ImportHamburgGeometry implements ApplicationRunner {
         ObjectMapper mapper = new ObjectMapper();
 
         FeaturesDTO features = mapper.readValue(
-            new File("src/main/resources/import_data/districts/hamburg.json"),FeaturesDTO.class
+                new ClassPathResource("import_data/districts/hamburg.json").getInputStream(),
+                FeaturesDTO.class
         );
         List<GeoJsonDistrictDTO> geoJsons = features.getFeatures();
         GeoJSONReader reader = new GeoJSONReader();

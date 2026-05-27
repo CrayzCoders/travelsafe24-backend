@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: staysafe
+  datasource:
+    url: jdbc:postgresql://postgres:5432/staysafe
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        default_schema: public
+        show_sql: false
+        format_sql: true
+  web:
+    resources:
+      add-mappings: false
+
+staysafe:
+  urls:
+    overpass: https://overpass-api.de/api
+  areas:
+    - Hamburg
+  amenities:
+    - bar
+    - nightclub
+    - kindergarten
+    - childcare
+    - college
+    - university
+    - school
+  amenityLimit: 10
+
+server:
+  servlet:
+    context-path: /api

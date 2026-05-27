@@ -22,10 +22,12 @@ import org.locationtech.jts.index.kdtree.KdTree;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
@@ -50,8 +52,8 @@ public class LoadAmenities implements ApplicationRunner {
     }
 
     @Override
-    public void run(@NonNull ApplicationArguments args) throws FileNotFoundException {
-        InputStream input = new FileInputStream("src/main/resources/import_osm_data/hamburg-260506.osm.pbf");
+    public void run(@NonNull ApplicationArguments args) throws IOException {
+        InputStream input = new ClassPathResource("import_osm_data/hamburg-260506.osm.pbf").getInputStream();
         PbfIterator iterator = new PbfIterator(input, true);
 
         List<Node> nodes = new ArrayList<>();
@@ -78,6 +80,7 @@ public class LoadAmenities implements ApplicationRunner {
                     break;
                 case Relation:
                     relations.add((Relation) container.getEntity());
+                    break;
                 default:
                     break;
             }
