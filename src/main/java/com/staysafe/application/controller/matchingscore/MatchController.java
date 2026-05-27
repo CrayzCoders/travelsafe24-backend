@@ -4,6 +4,11 @@ import com.staysafe.domain.district.District;
 import com.staysafe.domain.pointofinterest.PointOfInterest;
 import com.staysafe.domain.city.CityService;
 import com.staysafe.domain.matchingscore.MatchingScoreService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Matching Scores", description = "Compute weighted district matching scores based on user lifestyle preferences")
 @RestController
 public class MatchController {
     private final CityService cityService;
@@ -27,6 +33,17 @@ public class MatchController {
         this.matchingScoreService = matchingScoreService;
     }
 
+    @Operation(
+            summary = "Calculate district matching scores",
+            description = "Calculates a matching score (0–100) for every Hamburg district based on the user's " +
+                    "preferences for family institutions, nightlife, and centrality. " +
+                    "Scores are normalized across all districts and returned together with per-criteria detail."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Matching scores successfully calculated for all districts",
+            content = @Content(schema = @Schema(implementation = MatchResponseDTO.class))
+    )
     @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/get-matching-scores")
     public MatchResponseDTO getMatchingScores(@RequestBody MatchFormRequestDTO requestData) {
