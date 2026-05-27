@@ -31,17 +31,20 @@ public class MatchController {
     @PostMapping("/get-matching-scores")
     public MatchResponseDTO getMatchingScores(@RequestBody MatchFormRequestDTO requestData) {
         Map<String, Double> normalizedPreferences = matchingScoreService.normalizeUserPreferences(requestData);
+        Map<String, Double> weights = matchingScoreService.normalizeUserWeights(requestData);
         List<District> districts = this.cityService.getAllDistricts();
 
-        Map<String, Double> min = matchingScoreService.getMinValues(districts);
-        Map<String, Double> max = matchingScoreService.getMaxValues(districts);
+        Map<String, Double> medianDensities = matchingScoreService.computeMedianDensities(districts);
+        Map<String, Double> centralities = matchingScoreService.computeNormalizedCentralities(districts);
         Map<String, DistrictDTO> districtResults = new HashMap<>();
         double minScore = Double.MAX_VALUE;
         double maxScore = Double.MIN_VALUE;
 
         for (District district: districts) {
-            Map<String, Double> normDistrictData = matchingScoreService.getNormalizedDistrictData(district, min, max);
-            double matchingScore = matchingScoreService.computeMatchingScore(normalizedPreferences, normDistrictData);
+            Map<String, Double> normDistrictData = matchingScoreService.getNormalizedDistrictData(district, medianDensities);
+            normDistrictData.put("centrality", centralities.get(district.getName()));
+
+            double matchingScore = matchingScoreService.computeMatchingScore(normalizedPreferences, weights, normDistrictData);
 
             minScore = Math.min(minScore, matchingScore);
             maxScore = Math.max(maxScore, matchingScore);
@@ -51,9 +54,12 @@ public class MatchController {
             List<CriteriaDTO> criteriaList = new ArrayList<>();
 
             for (String key: normalizedPreferences.keySet()) {
-                double amount = sortedPoi.getOrDefault(key, List.of()).size();
-
-                criteriaList.add(new CriteriaDTO(key, amount));
+                if (key.equals("centrality")) {
+                    criteriaList.add(new CriteriaDTO(key, normDistrictData.get("centrality")));
+                } else {
+                    double amount = sortedPoi.getOrDefault(key, List.of()).size();
+                    criteriaList.add(new CriteriaDTO(key, amount));
+                }
             }
 
             districtResults.put(
